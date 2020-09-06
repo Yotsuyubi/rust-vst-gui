@@ -59,6 +59,8 @@ impl vst::editor::Editor for PluginGui {
     }
 
     fn close(&mut self) {
+        // close window before close gui.
+        self.execute("window.open('about:blank','_self').close()");
         self.gui.close()
     }
 

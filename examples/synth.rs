@@ -39,6 +39,8 @@ const HTML: &'static str = r#"
             var waveformRange = document.getElementById("waveformRange");
             var frequencyRange = document.getElementById("frequencyRange");
 
+            setInterval(() => external.invoke("getWaveform"), 100);
+
             waveformRange.value = external.invoke("getWaveform");
             frequencyRange.value = external.invoke("getFrequency");
 
