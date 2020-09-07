@@ -43,7 +43,8 @@ id create_webview(const void *parent, int width, int height, const char *html, c
     __WKUIDelegate = objc_allocateClassPair((Class) _cls("NSObject"), "__WKUIDelegate", 0);
     class_addProtocol(__WKUIDelegate, objc_getProtocol("WKUIDelegate"));
     class_addMethod(__WKUIDelegate, _sel("webView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:completionHandler:"), (IMP)(prompt_listener), "v@:@@@@?");
-    objc_registerClassPair(__WKUIDelegate);
+    // I don't know why bug fixed on comment below out.
+    // objc_registerClassPair(__WKUIDelegate);
   }
 
   id uiDel = objc_msgSend((id)__WKUIDelegate, _sel("new"));
@@ -63,5 +64,5 @@ id create_webview(const void *parent, int width, int height, const char *html, c
 }
 
 void destroy_webview(id webview) {
-  // TODO remove if not needed
+  objc_msgSend(webview, _sel("release"));
 }
