@@ -7,7 +7,7 @@ license = "MIT"
 keywords = ["gui", "plugin", "vst", "vst2"]
 
 [dependencies]
-vst = "^0.2"
+vst = { git = "https://github.com/RustAudio/vst-rs.git", rev = "a398697b" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.20.0"

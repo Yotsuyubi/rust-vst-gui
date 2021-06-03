@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use vst::buffer::AudioBuffer;
 use vst::editor::Editor;
-use vst::plugin::{Category, Plugin, Info};
+use vst::plugin::{Category, HostCallback, Info, Plugin};
 
 const HTML: &'static str = r#"
     <!doctype html>
@@ -61,9 +61,7 @@ struct Oscillator {
     pub amplitude: f32,
 }
 
-fn create_javascript_callback(
-    oscillator: Arc<Mutex<Oscillator>>) -> vst_gui::JavascriptCallback
-{
+fn create_javascript_callback(oscillator: Arc<Mutex<Oscillator>>) -> vst_gui::JavascriptCallback {
     Box::new(move |message: String| {
         let mut tokens = message.split_whitespace();
 
@@ -75,20 +73,20 @@ fn create_javascript_callback(
         match command {
             "getWaveform" => {
                 return locked_oscillator.waveform.to_string();
-            },
+            }
             "getFrequency" => {
                 return locked_oscillator.frequency.to_string();
-            },
+            }
             "setWaveform" => {
                 if argument.is_ok() {
                     locked_oscillator.waveform = argument.unwrap();
                 }
-            },
+            }
             "setFrequency" => {
                 if argument.is_ok() {
                     locked_oscillator.frequency = argument.unwrap();
                 }
-            },
+            }
             _ => {}
         }
 
@@ -103,25 +101,21 @@ struct ExampleSynth {
     oscillator: Arc<Mutex<Oscillator>>,
 }
 
-impl Default for ExampleSynth {
-    fn default() -> ExampleSynth {
-        let oscillator = Arc::new(Mutex::new(
-            Oscillator {
-                frequency: 440.0,
-                waveform: 0.0,
-                phase: 0.0,
-                amplitude: 0.1,
-            }
-        ));
+impl Plugin for ExampleSynth {
+    fn new(_host: HostCallback) -> Self {
+        let oscillator = Arc::new(Mutex::new(Oscillator {
+            frequency: 440.0,
+            waveform: 0.0,
+            phase: 0.0,
+            amplitude: 0.1,
+        }));
 
-        ExampleSynth {
+        Self {
             sample_rate: 44100.0,
             oscillator: oscillator.clone(),
         }
     }
-}
 
-impl Plugin for ExampleSynth {
     fn get_info(&self) -> Info {
         Info {
             name: "Example Synth".to_string(),
@@ -148,8 +142,7 @@ impl Plugin for ExampleSynth {
         let actual_frequency = oscillator.frequency;
 
         let phase = |sample_index: usize| {
-            actual_phase + 2.0 * PI * actual_frequency *
-                (sample_index as f32) / self.sample_rate
+            actual_phase + 2.0 * PI * actual_frequency * (sample_index as f32) / self.sample_rate
         };
 
         for (_, output) in buffer.zip() {
@@ -157,9 +150,8 @@ impl Plugin for ExampleSynth {
                 let sine_wave = phase(index).sin();
                 let square_wave = phase(index).cos().signum();
 
-                *sample = oscillator.amplitude *  (
-                    sine_wave * (1.0 - oscillator.waveform) +
-                    square_wave * oscillator.waveform);
+                *sample = oscillator.amplitude
+                    * (sine_wave * (1.0 - oscillator.waveform) + square_wave * oscillator.waveform);
             }
         }
 
@@ -170,7 +162,8 @@ impl Plugin for ExampleSynth {
         let gui = vst_gui::new_plugin_gui(
             String::from(HTML),
             create_javascript_callback(self.oscillator.clone()),
-            Some((480, 320)));
+            Some((480, 320)),
+        );
         Some(Box::new(gui))
     }
 }
